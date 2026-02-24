@@ -63,9 +63,14 @@ function loadData() {
         console.log("Sample record:", globalData[0]);
 
         // Initialize visualizations
-        initHistograms();
-        initScatterplot();
         
+        // Draw Histogram
+        initHistograms();
+        // Draw Scatterplot
+        initScatterplot();
+        // Draw Map
+        initMap();
+
         // Temporary: Display a message on the page
         // d3.select("#vis1_education_dist")
         //     .append("p")
@@ -80,6 +85,8 @@ function loadData() {
         d3.select("body").append("p").style("color", "red").text("Error loading data. Check console for details.");
     });
 }
+
+// LEVEL 1: Basic Visualizations (Histograms and Scatterplot)
 
 // 1. Histogram Function 
 // We will create two histograms: one for education and one for fertility 
@@ -172,7 +179,8 @@ svg.append("g")
 svg.append("g")  
 .call(d3.axisLeft(y));
 
- // 7. Add Axis Labels
+// 7. Add Axis Labels
+
 // X-axis Label
 svg.append("text")
     .attr("text-anchor", "end")
@@ -301,4 +309,116 @@ svg.append("text")
 .attr("y", -margin.left + 20)  
 .attr("x", -margin.top)  
 .text(Y_AXIS_LABEL);  
+}
+
+// LEVEL 2: CHOROPLETH MAP
+
+function initMap() {
+    const width = 1000;
+    const height = 500;
+    
+    // 1. Create SVG
+    const svg = d3.select("#vis_map")
+        .append("svg")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .style("width", "100%")
+        .style("height", "100%");
+
+    // 2. Define Map Projection (Mercator is standard)
+    const projection = d3.geoMercator()
+        .scale(120)
+        .center([0, 20])
+        .translate([width / 2, height / 2]);
+
+    const path = d3.geoPath().projection(projection);
+
+    // 3. Define Color Scales
+    // Blues for Education (0 to ~15 years)
+    const colorScaleEducation = d3.scaleSequential()
+        .interpolator(d3.interpolateBlues)
+        .domain([0, 14]); 
+
+    // Reds for Fertility (0 to ~8 children)
+    const colorScaleFertility = d3.scaleSequential()
+        .interpolator(d3.interpolateReds)
+        .domain([0, 7]); 
+
+    // 4. Load GeoJSON Data (World Shapes)
+    // We use a public URL for standard world boundaries
+    d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(function(topo) {
+    
+        let currentMetric = "Average years of schooling";
+
+        // 5. Draw the Map
+        const mapLayer = svg.append("g")
+            .selectAll("path")
+            .data(topo.features)
+            .join("path")
+            .attr("d", path)
+            .attr("fill", function(d) {
+                // Match the GeoJSON country name (d.properties.name) 
+                // with our CSV country name (d.Entity)
+                const countryData = globalData.find(row => row.Entity === d.properties.name);
+                
+                if (countryData) {
+                   return colorScaleEducation(countryData[currentMetric]);
+                } else {
+                   return "#ccc"; // Grey for missing data
+                }
+            })
+            .style("stroke", "#fff")
+            .style("stroke-width", "0.5px")
+            
+            // Add Tooltip (Using the existing tooltip div)
+            .on("mouseover", function(event, d) {
+                const countryData = globalData.find(row => row.Entity === d.properties.name);
+                
+                d3.select(this)
+                    .style("stroke", "black")
+                    .style("stroke-width", "1px");
+
+                tooltip.transition().duration(200).style("opacity", 0.9);
+                
+                if (countryData) {
+                    tooltip.html(`
+                        <strong>${d.properties.name}</strong><br/>
+                        ${currentMetric}: ${countryData[currentMetric]}
+                    `);
+                } else {
+                    tooltip.html(`<strong>${d.properties.name}</strong><br/>No data`);
+                }
+            })
+            .on("mousemove", function(event) {
+                tooltip
+                    .style("left", (event.pageX + 15) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function() {
+                d3.select(this)
+                    .style("stroke", "#fff")
+                    .style("stroke-width", "0.5px");
+                tooltip.transition().duration(500).style("opacity", 0);
+            });
+
+        // 6. Handle Dropdown Change
+        d3.select("#mapMetricSelect").on("change", function(event) {
+            currentMetric = event.target.value;
+            
+            // Choose the right color scale
+            const scale = (currentMetric === "Average years of schooling") 
+                          ? colorScaleEducation 
+                          : colorScaleFertility;
+
+            // Transition the colors
+            mapLayer.transition().duration(1000)
+                .attr("fill", function(d) {
+                    const countryData = globalData.find(row => row.Entity === d.properties.name);
+                    if (countryData) {
+                        return scale(countryData[currentMetric]);
+                    }
+                    return "#ccc";
+                });
+        });
+
+    });
 }
