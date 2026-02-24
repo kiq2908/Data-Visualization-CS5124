@@ -11,14 +11,19 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
+    <!-- DASHBOARD CONTAINER: 
+         Changed to 'container-fluid' to use the full width of the screen. 
+         This ensures all 4 charts fit on a single page without vertical scrolling, 
+         making it easier to compare visualizations (Level 2 Requirement) -->
     <div class="container-fluid px-4">
-        <!-- Project Title & Info -->
+        
+        <!-- HEADER SECTION: Project Title & Info -->
         <div class="row mt-3">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-end border-bottom pb-2 mb-3">
                     <div>
                         <h2 class="mb-1">Global Trends: Education vs. Fertility</h2>
+                        <!-- NOTE ON DATA: Fulfills the requirement to indicate what years the data represents -->
                         <p class="text-muted mb-0">Exploring the relationship between years of schooling and fertility rates across the world.
                         <br><small><em>Note: Data shown represents the most recent year available for each country. Hover over a country to see the specific year.</em></small></p>
                     </div>
@@ -29,13 +34,15 @@
             </div>
         </div>
 
-        <!-- Top Row: Map and Scatterplot -->
+        <!-- TOP ROW: Primary Visualizations 
+             Using 'col-lg-6' splits the screen 50/50 on large monitors so the Map and Scatterplot sit side-by-side. -->
         <div class="row mb-3">
-            <!-- Map (Left) -->
+            <!-- MAP (Left) -->
             <div class="col-lg-6">
                 <div class="chart-container h-100">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h5 class="mb-0">World Map: Geographic Distribution</h5>
+                        <!-- MAP TOGGLE: Allows user to switch between Education and Fertility (Level 2 Requirement) -->
                         <select id="mapMetricSelect" class="form-select form-select-sm w-auto">
                             <option value="Average years of schooling">Show: Education (Years)</option>
                             <option value="Total fertility rate">Show: Fertility (Children)</option>
@@ -45,7 +52,7 @@
                 </div>
             </div>
             
-            <!-- Scatterplot (Right) -->
+            <!-- SCATTERPLOT (Right) -->
             <div class="col-lg-6">
                 <div class="chart-container h-100">
                     <h5 class="mb-2">Correlation: Education vs. Fertility</h5>
@@ -54,9 +61,10 @@
             </div>
         </div>
 
-        <!-- Bottom Row: Histograms -->
-        <div class="row mb-3">
-            <!-- Education Histogram (Left) -->
+        <!-- BOTTOM ROW: Distribution Histograms 
+             Placed at the bottom as secondary context to support the main charts above. -->
+               <div class="row mb-3">
+            <!-- EDUCATION HISTOGRAM (Left) -->
             <div class="col-lg-6">
                 <div class="chart-container h-100">
                     <h5 class="mb-2">Distribution: Mean Years of Schooling</h5>
@@ -64,7 +72,7 @@
                 </div>
             </div>
             
-            <!-- Fertility Histogram (Right) -->
+            <!-- FERTILITY HISTOGRAM (Right) -->
             <div class="col-lg-6">
                 <div class="chart-container h-100">
                     <h5 class="mb-2">Distribution: Fertility Rate</h5>
@@ -75,6 +83,8 @@
         
     </div>
 
+    <!-- FOOTER: Simple centered footer with project info -->
+     
     <div class="footer text-center py-2">
         <small class="text-muted">&copy; 2026 Quoc Huynh - Data Visualization - Project 1.</small>
     </div>
