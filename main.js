@@ -129,8 +129,39 @@ svg.selectAll("rect")
 .attr("transform", d => `translate(${x(d.x0)}, ${y(d.length)})`)  
 .attr("width", d => x(d.x1) - x(d.x0) - 1)  
 .attr("height", d => height - y(d.length))  
-.style("fill", color);  
-  
+.style("fill", color)
+
+// Adding Linked Highlighting 
+.on("mouseover", function(event, d) {
+const minVal = d.x0;
+const maxVal = d.x1;
+
+// 1. Highlight the bar itself
+d3.select(this).style("fill", "orange");
+
+// 2. Filter Update the Scatterplot
+d3.select("#vis3_scatterplot")
+    .selectAll("circle")
+    .style("opacity", circleData => {
+        const val = circleData[dataKey];
+        if (val >= minVal && val < maxVal) return 1.0; 
+        else return 0.1;
+    })
+    .style("stroke", circleData => {
+        const val = circleData[dataKey];
+        return (val >= minVal && val < maxVal) ? "black" : "none";
+    });
+})
+.on("mouseout", function() {
+    // 1. Return bar to original color
+    d3.select(this).style("fill", color);
+
+    // 2. Return scatterplot to normal
+    d3.select("#vis3_scatterplot")
+        .selectAll("circle")
+        .style("opacity", 0.7)
+        .style("stroke", "white");
+});
   
 // 6. Add Axes  
 svg.append("g")  
