@@ -324,7 +324,7 @@ function initMap() {
         .style("width", "100%")
         .style("height", "100%");
 
-    // 2. Define Map Projection (Mercator is standard)
+    // 2. Define Map Projection
     const projection = d3.geoMercator()
         .scale(120)
         .center([0, 20])
@@ -333,20 +333,17 @@ function initMap() {
     const path = d3.geoPath().projection(projection);
 
     // 3. Define Color Scales
-    // Blues for Education (0 to ~15 years)
     const colorScaleEducation = d3.scaleSequential()
         .interpolator(d3.interpolateBlues)
         .domain([0, 14]); 
 
-    // Reds for Fertility (0 to ~8 children)
     const colorScaleFertility = d3.scaleSequential()
         .interpolator(d3.interpolateReds)
         .domain([0, 7]); 
 
-    // 4. Load GeoJSON Data (World Shapes)
-    // We use a public URL for standard world boundaries
+    // 4. Load GeoJSON Data
     d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(function(topo) {
-    
+        
         let currentMetric = "Average years of schooling";
 
         // 5. Draw the Map
@@ -356,9 +353,9 @@ function initMap() {
             .join("path")
             .attr("d", path)
             .attr("fill", function(d) {
-                // Match the GeoJSON country name (d.properties.name) 
-                // with our CSV country name (d.Entity)
-                const countryData = globalData.find(row => row.Entity === d.properties.name);
+                // FIXED: Match GeoJSON ID (d.id) with CSV Code (row.Code)
+                // d.id is usually the 3-letter ISO code (e.g., "USA", "VNM")
+                const countryData = globalData.find(row => row.Code === d.id);
                 
                 if (countryData) {
                    return colorScaleEducation(countryData[currentMetric]);
@@ -369,9 +366,10 @@ function initMap() {
             .style("stroke", "#fff")
             .style("stroke-width", "0.5px")
             
-            // Add Tooltip (Using the existing tooltip div)
+            // Add Tooltip
             .on("mouseover", function(event, d) {
-                const countryData = globalData.find(row => row.Entity === d.properties.name);
+                // FIXED: Look up by Code here too
+                const countryData = globalData.find(row => row.Code === d.id);
                 
                 d3.select(this)
                     .style("stroke", "black")
@@ -381,7 +379,7 @@ function initMap() {
                 
                 if (countryData) {
                     tooltip.html(`
-                        <strong>${d.properties.name}</strong><br/>
+                        <strong>${countryData.Entity}</strong><br/>
                         ${currentMetric}: ${countryData[currentMetric]}
                     `);
                 } else {
@@ -404,15 +402,14 @@ function initMap() {
         d3.select("#mapMetricSelect").on("change", function(event) {
             currentMetric = event.target.value;
             
-            // Choose the right color scale
             const scale = (currentMetric === "Average years of schooling") 
                           ? colorScaleEducation 
                           : colorScaleFertility;
 
-            // Transition the colors
             mapLayer.transition().duration(1000)
                 .attr("fill", function(d) {
-                    const countryData = globalData.find(row => row.Entity === d.properties.name);
+                    // FIXED: Look up by Code here too
+                    const countryData = globalData.find(row => row.Code === d.id);
                     if (countryData) {
                         return scale(countryData[currentMetric]);
                     }
