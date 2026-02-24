@@ -95,15 +95,16 @@ function initHistograms() {
 // A helper function to draw one histogram so we don't copy-paste code  
 function createHistogram(selector, dataKey, color) {  
 // 1. Set up dimensions  
-const width = 500 - margin.left - margin.right;  //
-const height = 300 - margin.top - margin.bottom;  
+const width = 400 - margin.left - margin.right;  //
+const height = 250 - margin.top - margin.bottom;  
   
   
 // 2. Create SVG container   
 const svg = d3.select(selector)  
 .append("svg")  
-.attr("width", width + margin.left + margin.right)  
-.attr("height", height + margin.top + margin.bottom)  
+.attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+.style("width", "100%")
+.style("height", "100%")
 .append("g")  
 .attr("transform", `translate(${margin.left},${margin.top})`);  
   
@@ -210,15 +211,16 @@ createHistogram("#vis2_fertility_dist", "Total fertility rate", "#404080");
 // 2. Scatterplot Function  
 function initScatterplot() {  
 // 1. Set up dimensions  
-const width = 1000 - margin.left - margin.right; // Bigger width for scatter  
-const height = 500 - margin.top - margin.bottom;  
+const width = 500 - margin.left - margin.right; // Bigger width for scatter  
+const height = 350 - margin.top - margin.bottom;  
   
   
 // 2. Create SVG  
 const svg = d3.select("#vis3_scatterplot")  
 .append("svg")  
-.attr("width", width + margin.left + margin.right)  
-.attr("height", height + margin.top + margin.bottom)  
+.attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+.style("width", "100%")
+.style("height", "100%")
 .append("g")  
 .attr("transform", `translate(${margin.left},${margin.top})`);  
   
@@ -260,7 +262,7 @@ svg.append('g')
 
     // 3. Set the text inside the tooltip
     tooltip.html(`
-        <strong>${d.Entity}</strong><br/>
+        <strong>${d.Entity} (${d.Year})</strong><br/>
         Schooling: ${d['Average years of schooling']} years<br/>
         Fertility: ${d['Total fertility rate']} children
     `);
@@ -341,6 +343,22 @@ function initMap() {
         .interpolator(d3.interpolateReds)
         .domain([0, 7]); 
 
+    // --- HELPER FUNCTION: Find Country Data ---
+    // Fix the matching issues
+    function findCountryData(geoFeature) {
+        // 1. Try matching by 3-letter Code (Best)
+        const geoID = geoFeature.id ? geoFeature.id.trim().toUpperCase() : "";
+        if (geoID.length === 3) {
+            const match = globalData.find(row => row.Code === geoID);
+            if (match) return match;
+        }
+
+        // 2. If no code match, try matching by Name (Fallback)
+        const geoName = geoFeature.properties.name;
+        const matchByName = globalData.find(row => row.Entity === geoName);
+        return matchByName;
+    }
+
     // 4. Load GeoJSON Data
     d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(function(topo) {
         
@@ -353,9 +371,7 @@ function initMap() {
             .join("path")
             .attr("d", path)
             .attr("fill", function(d) {
-                // FIXED: Match GeoJSON ID (d.id) with CSV Code (row.Code)
-                // d.id is usually the 3-letter ISO code (e.g., "USA", "VNM")
-                const countryData = globalData.find(row => row.Code === d.id);
+                const countryData = findCountryData(d); // Use helper
                 
                 if (countryData) {
                    return colorScaleEducation(countryData[currentMetric]);
@@ -368,8 +384,7 @@ function initMap() {
             
             // Add Tooltip
             .on("mouseover", function(event, d) {
-                // FIXED: Look up by Code here too
-                const countryData = globalData.find(row => row.Code === d.id);
+                const countryData = findCountryData(d); // Use helper here too!
                 
                 d3.select(this)
                     .style("stroke", "black")
@@ -379,7 +394,7 @@ function initMap() {
                 
                 if (countryData) {
                     tooltip.html(`
-                        <strong>${countryData.Entity}</strong><br/>
+                        <strong>${countryData.Entity} (${countryData.Year})</strong><br/>
                         ${currentMetric}: ${countryData[currentMetric]}
                     `);
                 } else {
@@ -398,6 +413,53 @@ function initMap() {
                 tooltip.transition().duration(500).style("opacity", 0);
             });
 
+        // --- ADD LEGEND ---
+        // Create a group for the legend
+        const legendGroup = svg.append("g")
+            .attr("id", "map-legend")
+            .attr("transform", `translate(20, ${height - 40})`);
+
+        // Create a linear gradient for the legend
+        const defs = svg.append("defs");
+        const linearGradient = defs.append("linearGradient")
+            .attr("id", "linear-gradient");
+
+        // Draw the legend rectangle
+        legendGroup.append("rect")
+            .attr("width", 200)
+            .attr("height", 15)
+            .style("fill", "url(#linear-gradient)");
+
+        // Add text labels for min and max
+        const legendMinText = legendGroup.append("text")
+            .attr("x", 0)
+            .attr("y", -5)
+            .style("font-size", "12px");
+
+        const legendMaxText = legendGroup.append("text")
+            .attr("x", 200)
+            .attr("y", -5)
+            .attr("text-anchor", "end")
+            .style("font-size", "12px");
+
+        // Function to update the legend based on the current metric
+        function updateLegend(metric) {
+            const scale = (metric === "Average years of schooling") ? colorScaleEducation : colorScaleFertility;
+            const domain = scale.domain();
+            
+            // Update gradient colors
+            linearGradient.selectAll("stop").remove();
+            linearGradient.append("stop").attr("offset", "0%").attr("stop-color", scale(domain[0]));
+            linearGradient.append("stop").attr("offset", "100%").attr("stop-color", scale(domain[1]));
+
+            // Update text
+            legendMinText.text(domain[0]);
+            legendMaxText.text(domain[1] + (metric === "Average years of schooling" ? " years" : " children"));
+        }
+
+        // Initialize legend
+        updateLegend(currentMetric);
+
         // 6. Handle Dropdown Change
         d3.select("#mapMetricSelect").on("change", function(event) {
             currentMetric = event.target.value;
@@ -408,13 +470,15 @@ function initMap() {
 
             mapLayer.transition().duration(1000)
                 .attr("fill", function(d) {
-                    // FIXED: Look up by Code here too
-                    const countryData = globalData.find(row => row.Code === d.id);
+                    const countryData = findCountryData(d); // Use helper here too!
                     if (countryData) {
                         return scale(countryData[currentMetric]);
                     }
                     return "#ccc";
                 });
+                
+            // Update the legend
+            updateLegend(currentMetric);
         });
 
     });
