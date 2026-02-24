@@ -48,17 +48,17 @@ function loadData() {
         console.log("Sample record:", globalData[0]);
 
         // Initialize visualizations
-        //initHistograms();
-        //initScatterplot();
+        initHistograms();
+        initScatterplot();
         
         // Temporary: Display a message on the page
-        d3.select("#vis1_education_dist")
-            .append("p")
-            .text(`Data loaded successfully! Found ${globalData.length} countries for year ${SELECTED_YEAR}.`);
+        // d3.select("#vis1_education_dist")
+        //     .append("p")
+        //     .text(`Data loaded successfully! Found ${globalData.length} countries for year ${SELECTED_YEAR}.`);
 
-        d3.select("#vis2_fertility_dist")
-            .append("p")
-            .text(`Data loaded successfully! Found ${globalData.length} countries for year ${SELECTED_YEAR}.`);
+        // d3.select("#vis2_fertility_dist")
+        //     .append("p")
+        //     .text(`Data loaded successfully! Found ${globalData.length} countries for year ${SELECTED_YEAR}.`);
 
     }).catch(error => {
         console.error("Error loading the data:", error);
@@ -66,3 +66,137 @@ function loadData() {
     });
 }
 
+// 1. Histogram Function 
+// We will create two histograms: one for education and one for fertility 
+function initHistograms() { 
+
+// A helper function to draw one histogram so we don't copy-paste code  
+function createHistogram(selector, dataKey, color) {  
+// 1. Set up dimensions  
+const width = 500 - margin.left - margin.right;  //
+const height = 300 - margin.top - margin.bottom;  
+  
+  
+// 2. Create SVG container  
+const svg = d3.select(selector)  
+.append("svg")  
+.attr("width", width + margin.left + margin.right)  
+.attr("height", height + margin.top + margin.bottom)  
+.append("g")  
+.attr("transform", `translate(${margin.left},${margin.top})`);  
+  
+  
+// 3. Create X scale (linear scale for numbers)  
+const x = d3.scaleLinear()  
+.domain([0, d3.max(globalData, d => d[dataKey])]) // From 0 to max value  
+.range([0, width]);  
+  
+  
+// 4. Create Y scale (counts) - we need to calculate bins first  
+const histogram = d3.bin()  
+.domain(x.domain())  
+.thresholds(x.ticks(20)); // Try to make ~20 bars  
+  
+  
+const bins = histogram(globalData.map(d => d[dataKey]));  
+  
+  
+const y = d3.scaleLinear()  
+.domain([0, d3.max(bins, d => d.length)])  
+.range([height, 0]);  
+  
+  
+// 5. Draw Bars  
+svg.selectAll("rect")  
+.data(bins)  
+.join("rect")  
+.attr("x", 1)  
+.attr("transform", d => `translate(${x(d.x0)}, ${y(d.length)})`)  
+.attr("width", d => x(d.x1) - x(d.x0) - 1)  
+.attr("height", d => height - y(d.length))  
+.style("fill", color);  
+  
+  
+// 6. Add Axes  
+svg.append("g")  
+.attr("transform", `translate(0, ${height})`)  
+.call(d3.axisBottom(x));  
+  
+  
+svg.append("g")  
+.call(d3.axisLeft(y));  
+}  
+  
+  
+// Call the helper for Education  
+createHistogram("#vis1_education_dist", "Average years of schooling", "#69b3a2");  
+// Call the helper for Fertility  
+createHistogram("#vis2_fertility_dist", "Total fertility rate", "#404080");  
+}  
+  
+  
+// 2. Scatterplot Function  
+function initScatterplot() {  
+// 1. Set up dimensions  
+const width = 1000 - margin.left - margin.right; // Bigger width for scatter  
+const height = 500 - margin.top - margin.bottom;  
+  
+  
+// 2. Create SVG  
+const svg = d3.select("#vis3_scatterplot")  
+.append("svg")  
+.attr("width", width + margin.left + margin.right)  
+.attr("height", height + margin.top + margin.bottom)  
+.append("g")  
+.attr("transform", `translate(${margin.left},${margin.top})`);  
+  
+  
+// 3. Scales  
+const x = d3.scaleLinear()  
+.domain([0, d3.max(globalData, d => d['Average years of schooling'])])  
+.range([0, width]);  
+  
+  
+const y = d3.scaleLinear()  
+.domain([0, d3.max(globalData, d => d['Total fertility rate'])])  
+.range([height, 0]);  
+  
+  
+// 4. Draw Circles (Dots)  
+svg.append('g')  
+.selectAll("circle")  
+.data(globalData)  
+.join("circle")  
+.attr("cx", d => x(d['Average years of schooling']))  
+.attr("cy", d => y(d['Total fertility rate']))  
+.attr("r", 5) // Radius of dots  
+.style("fill", "#69b3a2")  
+.style("opacity", 0.7)  
+.style("stroke", "white");  
+  
+  
+// 5. Add Axes  
+svg.append("g")  
+.attr("transform", `translate(0, ${height})`)  
+.call(d3.axisBottom(x));  
+  
+  
+svg.append("g")  
+.call(d3.axisLeft(y));  
+  
+  
+// 6. Add Labels  
+svg.append("text")  
+.attr("text-anchor", "end")  
+.attr("x", width)  
+.attr("y", height - 10)  
+.text(X_AXIS_LABEL);  
+  
+  
+svg.append("text")  
+.attr("text-anchor", "end")  
+.attr("transform", "rotate(-90)")  
+.attr("y", -margin.left + 20)  
+.attr("x", -margin.top)  
+.text(Y_AXIS_LABEL);  
+}
