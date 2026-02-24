@@ -14,7 +14,22 @@ const Y_AXIS_LABEL = "Total fertility rate";
 
 // Define margins and dimensions for charts
 const margin = {top: 20, right: 30, bottom: 40, left: 50};
-// We will calculate width/height dynamically based on container size
+// Reminder: we will calculate width/height dynamically based on container size by changing from the fixed
+// dimension to extractiong the current dimension by HTML container
+
+
+// Create a tooltip div that is hidden by default
+const tooltip = d3.select("body")
+    .append("div")
+    .style("opacity", 0)
+    .style("position", "absolute")
+    .style("background-color", "white")
+    .style("border", "1px solid #ccc")
+    .style("border-radius", "5px")
+    .style("padding", "10px")
+    .style("pointer-events", "none") // Start hidden and ignore mouse events
+    .style("box-shadow", "0 2px 5px rgba(0,0,0,0.2)");
+
 
 // run the loadData function once the DOM (web page) is fully loaded
 // the document object represents the web page, 
@@ -77,7 +92,7 @@ const width = 500 - margin.left - margin.right;  //
 const height = 300 - margin.top - margin.bottom;  
   
   
-// 2. Create SVG container  
+// 2. Create SVG container   
 const svg = d3.select(selector)  
 .append("svg")  
 .attr("width", width + margin.left + margin.right)  
@@ -172,8 +187,45 @@ svg.append('g')
 .attr("r", 5) // Radius of dots  
 .style("fill", "#69b3a2")  
 .style("opacity", 0.7)  
-.style("stroke", "white");  
+.style("stroke", "white")
   
+// Tooltip Interactions
+.on("mouseover", function(event, d) {
+    // 1. Make the dot bigger and darker to show selection
+    d3.select(this)
+        .transition().duration(100)
+        .attr("r", 8)
+        .style("opacity", 1)
+        .style("stroke", "black");
+
+    // 2. Show the tooltip div
+    tooltip.transition().duration(200).style("opacity", 0.9);
+
+    // 3. Set the text inside the tooltip
+    tooltip.html(`
+        <strong>${d.Entity}</strong><br/>
+        Schooling: ${d['Average years of schooling']} years<br/>
+        Fertility: ${d['Total fertility rate']} children
+    `);
+})
+.on("mousemove", function(event, d) {
+    // Move the tooltip to where the mouse is
+    // We add offsets (10px) so the mouse doesn't cover the text
+    tooltip
+        .style("left", (event.pageX + 15) + "px")
+        .style("top", (event.pageY - 28) + "px");
+})
+.on("mouseout", function(event, d) {
+    // 1. Return dot to normal size/color
+    d3.select(this)
+        .transition().duration(200)
+        .attr("r", 5)
+        .style("opacity", 0.7)
+        .style("stroke", "white");
+
+    // 2. Hide the tooltip
+    tooltip.transition().duration(500).style("opacity", 0);
+});
   
 // 5. Add Axes  
 svg.append("g")  
