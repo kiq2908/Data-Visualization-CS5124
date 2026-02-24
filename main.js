@@ -7,9 +7,9 @@ console.log("Global Trends application loaded.");
 let globalData = []; // array to hold the filtered data for the selected year
 const SELECTED_YEAR = 2020; //most recent year
 
-// label for the x-axis in the scatterplot
+// label for the x-axis in the Scatterplot
 const X_AXIS_LABEL = "Average years of schooling"; 
-// label for the y-axis in the scatterplot
+// label for the y-axis in the Scatterplot
 const Y_AXIS_LABEL = "Total fertility rate"; 
 
 // Define margins and dimensions for charts
@@ -139,7 +139,25 @@ svg.append("g")
   
   
 svg.append("g")  
-.call(d3.axisLeft(y));  
+.call(d3.axisLeft(y));
+
+ // 7. Add Axis Labels
+// X-axis Label
+svg.append("text")
+    .attr("text-anchor", "end")
+    .attr("x", width)
+    .attr("y", height + 35) // Position below the x-axis
+    .style("font-size", "12px")
+    .text(dataKey); // Use the data variable name as the label
+
+// Y-axis Label
+svg.append("text")
+    .attr("text-anchor", "end")
+    .attr("transform", "rotate(-90)")
+    .attr("y", -35) // Position to the left of y-axis
+    .attr("x", 0)
+    .style("font-size", "12px")
+    .text("Country Counts"); // Label for counts
 }  
   
   
@@ -238,13 +256,14 @@ svg.append("g")
   
   
 // 6. Add Labels  
+// X axis label for Scatterplot
 svg.append("text")  
 .attr("text-anchor", "end")  
 .attr("x", width)  
 .attr("y", height - 10)  
 .text(X_AXIS_LABEL);  
   
-  
+// Y axis label for Scatterplot (rotated)
 svg.append("text")  
 .attr("text-anchor", "end")  
 .attr("transform", "rotate(-90)")  
