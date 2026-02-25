@@ -1,9 +1,10 @@
 import pandas as pd
 import os
+from functools import reduce
 
-def perform_merge(df1, df2, name1, name2, merged_data_dir):
+def perform_merge(dfs, names, merged_data_dir):
     """
-    Merges two dataframes on common columns (Entity, Code, Year)
+    Merges multiple dataframes on common columns (Entity, Code, Year)
     and saves the result to merged_data_dir.
     """
     
@@ -11,27 +12,29 @@ def perform_merge(df1, df2, name1, name2, merged_data_dir):
     if not os.path.exists(merged_data_dir):
         os.makedirs(merged_data_dir)
 
-    print(f"\nMerging {name1} and {name2}...")
+    print(f"\nMerging {', '.join(names)}...")
     
     # Note: This assumes both CSVs have Entity, Code, Year. 
     # If columns might differ, you might need extra logic to ask user for keys.
     try:
         common_cols = ['Entity', 'Code', 'Year']
         
-        # Verify columns exist in both dataframes
-        missing_cols1 = [col for col in common_cols if col not in df1.columns]
-        missing_cols2 = [col for col in common_cols if col not in df2.columns]
-        
-        if missing_cols1 or missing_cols2:
-             raise KeyError(f"Missing columns for merge.\n{name1} missing: {missing_cols1}\n{name2} missing: {missing_cols2}")
+        # Verify columns exist in all dataframes
+        for i, df in enumerate(dfs):
+            missing_cols = [col for col in common_cols if col not in df.columns]
+            if missing_cols:
+                 raise KeyError(f"Missing columns for merge.\n{names[i]} missing: {missing_cols}")
 
-        merged_df = pd.merge(df1, df2, on=common_cols, how='inner')
+        merged_df = reduce(lambda left, right: pd.merge(left, right, on=common_cols, how='inner'), dfs)
         
         print("\nMerged Data Info:")
         print(merged_df.info())
         print(merged_df.head())
 
-        output_filename = f"merged_{name1}_and_{name2}.csv"
+        output_filename = f"merged_{'_and_'.join(names)}.csv"
+        if len(output_filename) > 200:
+            output_filename = "merged_multiple_datasets.csv"
+            
         output_path = os.path.join(merged_data_dir, output_filename)
         
         merged_df.to_csv(output_path, index=False)

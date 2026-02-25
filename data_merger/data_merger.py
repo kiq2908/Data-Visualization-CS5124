@@ -27,7 +27,7 @@ def main():
         print("Q: Quit")
 
         # 3. User Selection
-        print("\nEnter two numbers separated by a space to merge (e.g., '1 3') or 'Q' to quit:")
+        print("\nEnter numbers separated by a space to merge (e.g., '1 3 4') or 'Q' to quit:")
         choice = input("> ").strip().upper()
 
         if choice == 'Q':
@@ -36,40 +36,48 @@ def main():
 
         selections = choice.split()
         
-        if len(selections) != 2:
-            print("Please select exactly two datasets to merge.")
+        if len(selections) < 2:
+            print("Please select at least two datasets to merge.")
             continue
 
-        id1, id2 = selections[0], selections[1]
-
-        if id1 not in datasets or id2 not in datasets:
-            print("Invalid selection numbers. Please try again.")
+        invalid_selection = False
+        for sel in selections:
+            if sel not in datasets:
+                print(f"Invalid selection number: {sel}. Please try again.")
+                invalid_selection = True
+                break
+        
+        if invalid_selection:
             continue
 
-        name1 = datasets[id1]['name']
-        name2 = datasets[id2]['name']
+        names = [datasets[sel]['name'] for sel in selections]
+        dfs = []
 
-        print(f"\n--- Loading {name1} and {name2} ---")
+        print(f"\n--- Loading {', '.join(names)} ---")
         
         # Load Dataframes from modules
-        df1, path1 = load_dataset(RAW_DATA_DIR, name1)
-        df2, path2 = load_dataset(RAW_DATA_DIR, name2)
+        for name in names:
+            df, path = load_dataset(RAW_DATA_DIR, name)
+            if df is not None:
+                dfs.append(df)
+            else:
+                print(f"Failed to load {name}.")
+                break
 
-        if df1 is None or df2 is None:
+        if len(dfs) != len(names):
             continue
 
         # Preview Heads
-        print(f"\nHEAD OF {name1}:")
-        print(df1.head())
-        print(f"\nHEAD OF {name2}:")
-        print(df2.head())
+        for i, name in enumerate(names):
+            print(f"\nHEAD OF {name}:")
+            print(dfs[i].head())
         
         # 4. Confirmation
         confirm = input("\nProceed with merge? (Y/N): ").strip().upper()
         
         if confirm == 'Y':
             # Perform Merge using module
-            success = perform_merge(df1, df2, name1, name2, MERGED_DATA_DIR)
+            success = perform_merge(dfs, names, MERGED_DATA_DIR)
             
             if success:
                 input("\nPress Enter to return to menu...")
