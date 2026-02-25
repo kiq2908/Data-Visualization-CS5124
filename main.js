@@ -460,6 +460,22 @@ function initMap() {
         // Initialize legend
         updateLegend(currentMetric);
 
+        // --- "No Data" indicator ---
+        const noDataGroup = legendGroup.append("g")
+            .attr("transform", "translate(220, 0)"); // Position to the right of the gradient bar
+
+        noDataGroup.append("rect")
+            .attr("width", 15)
+            .attr("height", 15)
+            .attr("fill", "#ccc")
+            .attr("stroke", "#999");
+
+        noDataGroup.append("text")
+            .attr("x", 22)
+            .attr("y", 12)
+            .text("No data")
+            .style("font-size", "12px");
+
         // 6. Handle Dropdown Change
         d3.select("#mapMetricSelect").on("change", function(event) {
             currentMetric = event.target.value;
