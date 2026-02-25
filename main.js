@@ -21,13 +21,13 @@ const margin = {top: 20, right: 30, bottom: 40, left: 50};
 // Create a tooltip div that is hidden by default
 const tooltip = d3.select("body")
     .append("div")
+    .attr("class", "tooltip-custom")
     .style("opacity", 0)
     .style("position", "absolute")
     .style("background-color", "white")
     .style("border", "1px solid #ccc")
     .style("border-radius", "5px")
     .style("padding", "10px")
-    .style("pointer-events", "none") // Start hidden and ignore mouse events
     .style("box-shadow", "0 2px 5px rgba(0,0,0,0.2)");
 
 
@@ -336,11 +336,11 @@ function initMap() {
 
     // 3. Define Color Scales
     const colorScaleEducation = d3.scaleSequential()
-        .interpolator(d3.interpolateBlues)
+        .interpolator(d3.interpolateYlGnBu)
         .domain([0, 14]); 
 
     const colorScaleFertility = d3.scaleSequential()
-        .interpolator(d3.interpolateReds)
+        .interpolator(d3.interpolateYlOrRd)
         .domain([0, 7]); 
 
     // --- HELPER FUNCTION: Find Country Data ---
