@@ -138,6 +138,8 @@ svg.selectAll("rect")
 .attr("width", d => x(d.x1) - x(d.x0) - 1)  
 .attr("height", d => height - y(d.length))  
 .style("fill", color)
+.style("stroke", "white")
+.style("stroke-width", "1px")
 
 // Adding Linked Highlighting 
 .on("mouseover", function(event, d) {
@@ -202,9 +204,9 @@ svg.append("text")
   
   
 // Call the helper for Education  
-createHistogram("#vis1_education_dist", "Average years of schooling", "#69b3a2");  
+createHistogram("#vis1_education_dist", "Average years of schooling", "steelblue");  
 // Call the helper for Fertility  
-createHistogram("#vis2_fertility_dist", "Total fertility rate", "#404080");  
+createHistogram("#vis2_fertility_dist", "Total fertility rate", "steelblue");  
 }  
   
   
@@ -244,8 +246,8 @@ svg.append('g')
 .attr("cx", d => x(d['Average years of schooling']))  
 .attr("cy", d => y(d['Total fertility rate']))  
 .attr("r", 5) // Radius of dots  
-.style("fill", "#69b3a2")  
-.style("opacity", 0.7)  
+.style("fill", "steelblue")  
+.style("opacity", 0.6)  
 .style("stroke", "white")
   
 // Tooltip Interactions
