@@ -17,5 +17,36 @@ body {
     margin-bottom: 20px;
     min-height: 400px;
 }
+.chart-container h5 {
+    color: #2c3e50;
+    font-weight: 600;
+    border-bottom: 1px solid #eee; /* Subtle separator to frame the chart area */
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
 h1 { margin-top: 40px; margin-bottom: 20px; }
 .footer { margin-top: 50px; padding: 20px; font-size: 0.9em; color: #666; text-align: center; }
+
+/* Tufte's Data-Ink Ratio: Lighten the axis lines and ticks to remove clutter */
+.domain, .tick line {
+    stroke: #d3d3d3; /* Light grey instead of harsh black */
+    stroke-width: 0.8px;
+}
+
+/* Ensure chart text matches your modern body font and isn't pure black */
+svg text {
+    font-family: 'Google Sans', Arial, sans-serif;
+    fill: #555; /* Dark grey is softer on the eyes and reduces cognitive load */
+    font-size: 12px;
+}
+
+/* Tooltip: Clean typography and smooth fade for pre-attentive processing */
+.tooltip-custom {
+    font-family: 'Google Sans', Arial, sans-serif;
+    font-size: 13px;
+    color: #333;
+    line-height: 1.4;
+    pointer-events: none;
+    transition: opacity 0.15s ease-in-out;
+}
